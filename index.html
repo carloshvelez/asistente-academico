@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Académico</title>
+</head>
+<body>
+    <header id="header">
+        <h1>Asistente Académico - Capítulo 1</h1>
+    </header>
+    
+    <div id="container" class="container">
+        <div id="chat-container" class="chat-container">
+            <div id="api-key-container" class="api-key-container">
+                <input type="text" id="apiKeyInput" class="api-key-input" placeholder="Ingresa tu clave API de Gemini aquí...">
+                <button id="toggleApiVisibility" class="api-key-toggle">Mostrar/Ocultar</button>
+            </div>
+            
+            <div id="chatMessages" class="chat-messages">
+                <div class="message bot-message">
+                    Hola, soy tu asistente académico. Estoy aquí para ayudarte a comprender mejor el Capítulo 1. ¿Qué te gustaría saber?
+                </div>
+            </div>
+            
+            <div id="typingIndicator" class="typing-indicator">El asistente está escribiendo...</div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <div id="chat-input-container" class="chat-input-container">
+                <textarea id="chatInput" class="chat-input" placeholder="Escribe tu pregunta aquí..." rows="2"></textarea>
+                <button id="sendButton" class="send-button">Enviar</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer id="footer">
+        Asistente Académico © 2023 - Utiliza Gemini 2.0 Flash
+    </footer>
+
+<!-- Cargar bibliotecas para Markdown -->
+<script>
+    // Función para cargar scripts dinámicamente
+    function loadScript(url, callback) {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+    
+    // Cargar marked.js para renderizado de Markdown
+    loadScript('https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js', function() {
+        // Después cargar DOMPurify para sanitización
+        loadScript('https://cdn.jsdelivr.net/npm/dompurify@3.0.1/dist/purify.min.js', function() {
+            console.log('Bibliotecas de Markdown cargadas correctamente');
+        });
+    });
+</script>
+
+<script>
+    // Aplicar estilos mediante JavaScript
+    function applyStyles() {
+        // Estilos para body
+        document.body.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+        document.body.style.margin = "0";
+        document.body.style.padding = "0";
+        document.body.style.backgroundColor = "#f5f5f5";
+        document.body.style.color = "#333";
+        document.body.style.display = "flex";
+        document.body.style.flexDirection = "column";
+        document.body.style.minHeight = "100vh";
+        
+        // Estilos para container
+        const container = document.getElementById('container');
+        container.style.maxWidth = "900px";
+        container.style.margin = "0 auto";
+        container.style.padding = "20px";
+        container.style.flex = "1";
+        container.style.display = "flex";
+        container.style.flexDirection = "column";
+        
+        // Estilos para header
+        const header = document.getElementById('header');
+        header.style.backgroundColor = "#2c3e50";
+        header.style.color = "white";
+        header.style.padding = "20px 0";
+        header.style.textAlign = "center";
+        header.style.boxShadow = "0 2px 5px rgba(0,0,0,0.1)";
+        
+        // Estilos para h1
+        const h1 = document.querySelector('h1');
+        h1.style.margin = "0";
+        h1.style.fontSize = "24px";
+        
+        // Estilos para chat-container
+        const chatContainer = document.getElementById('chat-container');
+        chatContainer.style.flex = "1";
+        chatContainer.style.display = "flex";
+        chatContainer.style.flexDirection = "column";
+        chatContainer.style.backgroundColor = "white";
+        chatContainer.style.borderRadius = "8px";
+        chatContainer.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
+        chatContainer.style.overflow = "hidden";
+        chatContainer.style.marginTop = "20px";
+        
+        // Estilos para api-key-container
+        const apiKeyContainer = document.getElementById('api-key-container');
+        apiKeyContainer.style.padding = "15px";
+        apiKeyContainer.style.backgroundColor = "#f8f9fa";
+        apiKeyContainer.style.borderBottom = "1px solid #e9ecef";
+        apiKeyContainer.style.position = "relative";
+        
+        // Estilos para api-key-input
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        apiKeyInput.style.width = "100%";
+        apiKeyInput.style.padding = "10px";
+        apiKeyInput.style.border = "1px solid #ced4da";
+        apiKeyInput.style.borderRadius = "4px";
+        apiKeyInput.style.fontSize = "14px";
+        
+        // Estilos para api-key-toggle
+        const toggleApiVisibility = document.getElementById('toggleApiVisibility');
+        toggleApiVisibility.style.position = "absolute";
+        toggleApiVisibility.style.right = "25px";
+        toggleApiVisibility.style.top = "50%";
+        toggleApiVisibility.style.transform = "translateY(-50%)";
+        toggleApiVisibility.style.background = "none";
+        toggleApiVisibility.style.border = "none";
+        toggleApiVisibility.style.cursor = "pointer";
+        toggleApiVisibility.style.color = "#6c757d";
+        toggleApiVisibility.style.fontSize = "14px";
+        
+        // Estilos para chat-messages
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.style.flex = "1";
+        chatMessages.style.padding = "20px";
+        chatMessages.style.overflowY = "auto";
+        chatMessages.style.maxHeight = "400px";
+        
+        // Estilos para message
+        const messages = document.querySelectorAll('.message');
+        messages.forEach(msg => {
+            msg.style.marginBottom = "15px";
+            msg.style.padding = "10px 15px";
+            msg.style.borderRadius = "18px";
+            msg.style.maxWidth = "80%";
+            msg.style.lineHeight = "1.5";
+        });
+        
+        // Estilos para user-message
+        const userMessages = document.querySelectorAll('.user-message');
+        userMessages.forEach(msg => {
+            msg.style.backgroundColor = "#e3f2fd";
+            msg.style.alignSelf = "flex-end";
+            msg.style.marginLeft = "auto";
+            msg.style.borderBottomRightRadius = "4px";
+        });
+        
+        // Estilos para bot-message
+        const botMessages = document.querySelectorAll('.bot-message');
+        botMessages.forEach(msg => {
+            msg.style.backgroundColor = "#f1f1f1";
+            msg.style.alignSelf = "flex-start";
+            msg.style.borderBottomLeftRadius = "4px";
+        });
+        
+        // Estilos para chat-input-container
+        const chatInputContainer = document.getElementById('chat-input-container');
+        chatInputContainer.style.display = "flex";
+        chatInputContainer.style.padding = "15px";
+        chatInputContainer.style.borderTop = "1px solid #e9ecef";
+        
+        // Estilos para chat-input
+        const chatInput = document.getElementById('chatInput');
+        chatInput.style.flex = "1";
+        chatInput.style.padding = "12px";
+        chatInput.style.border = "1px solid #ced4da";
+        chatInput.style.borderRadius = "4px";
+        chatInput.style.fontSize = "14px";
+        chatInput.style.resize = "none";
+        
+        // Estilos para send-button
+        const sendButton = document.getElementById('sendButton');
+        sendButton.style.backgroundColor = "#2c3e50";
+        sendButton.style.color = "white";
+        sendButton.style.border = "none";
+        sendButton.style.borderRadius = "4px";
+        sendButton.style.padding = "0 20px";
+        sendButton.style.marginLeft = "10px";
+        sendButton.style.cursor = "pointer";
+        sendButton.style.transition = "background-color 0.3s";
+        
+        // Estilos para typing-indicator
+        const typingIndicator = document.getElementById('typingIndicator');
+        typingIndicator.style.display = "none";
+        typingIndicator.style.padding = "10px 15px";
+        typingIndicator.style.backgroundColor = "#f1f1f1";
+        typingIndicator.style.borderRadius = "18px";
+        typingIndicator.style.alignSelf = "flex-start";
+        typingIndicator.style.marginBottom = "15px";
+        typingIndicator.style.fontStyle = "italic";
+        typingIndicator.style.color = "#666";
+        
+        // Estilos para error-message
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.style.color = "#e74c3c";
+        errorMessage.style.padding = "10px";
+        errorMessage.style.textAlign = "center";
+        errorMessage.style.display = "none";
+        
+        // Estilos para footer
+        const footer = document.getElementById('footer');
+        footer.style.textAlign = "center";
+        footer.style.padding = "15px";
+        footer.style.backgroundColor = "#2c3e50";
+        footer.style.color = "white";
+        footer.style.fontSize = "14px";
+        
+        // Estilos adicionales para hover en botones
+        sendButton.addEventListener('mouseover', function() {
+            this.style.backgroundColor = "#1a252f";
+        });
+        sendButton.addEventListener('mouseout', function() {
+            this.style.backgroundColor = "#2c3e50";
+        });
+        
+        // MOVER AQUÍ: Estilos adicionales para elementos de Markdown
+        const styleMarkdown = document.createElement('style');
+        styleMarkdown.textContent = `
+            .bot-message h1, .bot-message h2, .bot-message h3, .bot-message h4 {
+                margin-top: 10px;
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+            .bot-message h1 { font-size: 1.5em; }
+            .bot-message h2 { font-size: 1.3em; }
+            .bot-message h3 { font-size: 1.1em; }
+            .bot-message h4 { font-size: 1em; }
+            .bot-message p { margin: 8px 0; }
+            .bot-message ul, .bot-message ol { padding-left: 20px; margin: 8px 0; }
+            .bot-message li { margin: 3px 0; }
+            .bot-message code {
+                background-color: #f0f0f0;
+                padding: 2px 4px;
+                border-radius: 3px;
+                font-family: monospace;
+            }
+            .bot-message pre {
+                background-color: #f0f0f0;
+                padding: 10px;
+                border-radius: 5px;
+                overflow-x: auto;
+                margin: 10px 0;
+            }
+            .bot-message blockquote {
+                border-left: 3px solid #ccc;
+                margin: 10px 0;
+                padding-left: 10px;
+                color: #666;
+            }
+            .bot-message a {
+                color: #0366d6;
+                text-decoration: none;
+            }
+            .bot-message a:hover {
+                text-decoration: underline;
+            }
+            .bot-message table {
+                border-collapse: collapse;
+                margin: 10px 0;
+            }
+            .bot-message th, .bot-message td {
+                border: 1px solid #ddd;
+                padding: 6px 10px;
+            }
+            .bot-message th {
+                background-color: #f2f2f2;
+            }
+        `;
+        document.head.appendChild(styleMarkdown);
+    }
+
+    
+    // Aplicar estilos al cargar la página
+    window.onload = applyStyles;
+    
+    // Contenido del capítulo (variable que se puede cambiar posteriormente)
+    const capitulo = `Modelos interpretativos del consumo de drogas
+
+ 
+
+Xavier Pons Diez*
+
+ 
+
+* Doctor en Psicología y máster en Psicología Comunitaria por la Universidad de Valencia, España. Profesor del Departamento de Psicología Social de la Universidad de Valencia. Ha publicado numerosos trabajos en el ámbito de la psicología social aplicada al estudio de la conducta de consumo de drogas, a la prevención social y al desarrollo comunitario. Correo electrónico: <xavier.pons@uv.es>.
+
+ 
+
+Artículo recibido el 5 de febrero.
+Aceptado el 15 de agosto de 2008.
+
+ 
+
+Resumen
+
+Se analizan los diferentes modelos interpretativos que pretenden comprender y dar explicación a la problemática del consumo de drogas. Para ello, se estudian nueve interpretaciones teóricas que se aproximan a la explicación de esta cuestión: modelo jurídico, modelo de la distribución del consumo, modelo médico tradicional, modelo de reducción del daño, modelo de la privación social, modelo de los factores socioestructurales, modelo de educación para la salud, modelo psicológico individualista y modelo socioecológico. En cada caso se expone su particular perspectiva interpretativa, sus aportaciones más relevantes y una discusión sobre sus limitaciones. El modelo socioecológico se presenta como una alternativa plausible para explicar la problemática del consumo de drogas desde las ciencias sociales y para intervenir eficazmente sobre ella, dada su vocación integradora.
+
+Palabras clave: consumo de sustancias, drogadicción, modelos epistemológicos, modelo socioecológico, psicología social de la salud.
+
+ 
+
+Abstracts
+
+This article analyzes different interpretive models that try to understand and explain the drug consumption problem. Nine theoretical interpretations that approach this question's explanation are studied: juridical model, consumption distribution model, traditional medical model, harm reduction model, social deprivation model, socio–structural factors model, health education model, individual psychological model and socio–ecological model. In each case, their particular interpretive perspective is exposed, their most relevant contributions and a discussion on their limitations. The socio–ecological model is presented as a possible alternative to explain the drugs consumption problematic from the social sciences point of view and to intervene effectively on it, because of it integration vocation.
+
+Key words: drug addiction, drug consumption, epistemology models, social psychology of health, socio–ecological model.
+
+ 
+
+Introducción: algunos conceptos básicos
+
+La problemática del consumo de drogas, como cualquier problema social, es susceptible de diversas interpretaciones epistemológicas. Se trata de un problema social complejo y multifactorial, tanto por sus causas y consecuencias, como por sus componentes e implicaciones. De este modo, podrá ser contemplado desde perspectivas distintas, cada una de las cuales enfatizará determinados aspectos y propondrá una postura aproximativa particular.
+
+Los múltiples elementos implicados determinan una complejidad de aspectos que deberán considerarse para poder entender y abordar de manera exhaustiva este problema social. Todo consumo de drogas implica la presencia de una persona que realiza una elección conductual, pero también supone una peculiar reacción del organismo ante la acción de una sustancia química, así como unos escenarios sociales con muchas variables condicionantes. Estamos hablando de un fenómeno que tiene, en definitiva, implicaciones múltiples: psicológicas, médicas, bioquímicas, sociológicas, etnológicas, jurídicas, económicas, políticas, educativas, históricas, éticas…
+
+Esa complejidad debería invitarnos a contemplar la problemática del consumo de drogas alejados de cualquier reduccionismo o interpretación parcial. Sin embargo, la formación específica de los investigadores y profesionales que la abordan ha creado diferentes modelos interpretativos –en ocasiones, formulados de manera, lamentablemente, irreconciliable– que, en todo caso, aportan también riqueza interpretativa, siempre que el investigador sea capaz de mantenerse alejado del mencionado reduccionismo, ya que éste impedirá explorar todas las implicaciones del fenómeno.
+
+En términos generales podemos diferenciar nueve grandes aportaciones interpretativas que analizaremos por separado en este artículo: modelo jurídico, modelo de la distribución del consumo, modelo médico tradicional, modelo de reducción del daño, modelo de la privación social, modelo de los factores socioestructurales, modelo de educación para la salud, modelo psicológico individualista y modelo socioecológico. Este último se presenta con una cierta vocación de síntesis, dado que pretende recoger los hallazgos relevantes de las otras interpretaciones, además de proponerse la superación de sus carencias y limitaciones. En todo caso, la perspectiva socioecológica proviene fundamentalmente de las ciencias sociales y, a pesar de la mencionada vocación integradora y superadora de reduccionismos, su explicación no puede ser comprendida sin atender a las aportaciones de los otros modelos. Por ello, intentaremos sistematizar en este trabajo las características de las interpretaciones teóricas mencionadas, con la finalidad de presentar una visión tan exhaustiva como sea posible de la problemática del consumo de drogas.
+
+No obstante, antes de cumplir con el propósito principal de este trabajo, creemos necesario establecer algunas cuestiones básicas sobre los conceptos que vamos a tratar, con la finalidad de delimitarlos conceptualmente.
+
+Partiremos de la definición ya clásica de droga psicoactiva aportada por la Organización Mundial de la Salud (OMS), entendida como toda sustancia que al ser introducida en el organismo modifica alguna de las funciones del sistema nervioso central (Kramer y Cameron, 1975). Es decir, una droga psicoactiva será aquella sustancia química capaz de producir efectos sobre la psique, con independencia de su clasificación sociológica.
+
+Lo anterior nos lleva a considerar el concepto de situación sociológica de la droga en las sociedades industrializadas y a diferenciar tres posibilidades (Berjano y Musitu, 1987):
+
+• Sustancias institucionalizadas: mantienen un estatus de legalidad controlada en cuanto a su producción, distribución, publicidad y consumo, además de recibir valoraciones mayoritariamente acríticas del medio social. Es el caso del alcohol y el tabaco.
+
+• Sustancias no institucionalizadas: mantienen un estatus de ilegalidad en los rubros señalados, además de recibir valoraciones mayoritariamente críticas del medio social.
+
+• Sustancias institucionalizadas con posibilidad de uso "desviado": sustancias elaboradas con finalidades médicas, que pueden "desviarse" de su propósito original para ser consumidas con una finalidad recreativa.
+
+La OMS destaca que el tabaco y el alcohol etílico son las drogas psicoactivas más consumidas en las sociedades industrializadas y las que se encuentran asociadas con mayores problemas de salud pública, motivo por el cual no deberían ser apartadas de la consideración genérica de droga, ni contempladas en un grado de nocividad menor con respecto a las sustancias no institucionalizadas (World Health Organization, 2000).
+
+También será necesario diferenciar conceptos relacionados con los niveles de consumo y la adicción a drogas. El término "consumo" hace referencia a la ingestión de una sustancia por parte de una persona en un momento dado. Es, por tanto, un concepto genérico y como tal debe ser entendido. Obviamente, no siempre el consumo de drogas será un consumo adictivo; este último se refiere a una pauta de comportamiento definible en términos clínicos, caracterizada por la priorización del consumo de una sustancia particular frente a otras conductas cotidianas, por la aparición de síntomas de abstinencia ante la privación y por la imposibilidad de la persona de controlar su consumo (American Psychiatric Association, 2002).
+
+La adicción no es la única modalidad de consumo de drogas que está relacionada con perjuicios para la salud. El consumo abusivo, aun sin ser necesariamente adictivo, representa una modalidad de riesgo para la salud, tanto por la morbilidad asociada a la toxicidad de las sustancias, como por la interferencia que el efecto psicoactivo puede ejercer sobre determinados comportamientos. Así, cabrá diferenciar dos formas de consumo abusivo (Pons, 2007):
+
+• Consumo abusivo cuantitativo: el consumo de una sustancia particular en una cantidad y frecuencia que sobrepasa los límites tolerables para el mantenimiento de la salud de la persona consumidora.
+
+• Consumo abusivo cualitativo: el consumo de una sustancia particular asociado a circunstancias particulares y con independencia de la frecuencia: conducción de vehículos, consumo laboral, consumo infantil, entre otros.
+
+Una vez explicados y aclarados los conceptos anteriores, nos adentraremos en la descripción y análisis de los modelos interpretativos del consumo de drogas.
+
+ 
+
+El modelo jurídico
+
+Esta perspectiva contempla el consumo de drogas desde el punto de vista de sus implicaciones legales y delictivas. El foco de interés es el propio producto y su situación legal. El modelo jurídico asume que las drogas que no están catalogadas como legales son fuente de graves daños físicos, psíquicos y sociales, y por tanto deben quedar fuera del alcance de los ciudadanos, al otro lado de la barrera levantada por la ley. Es decir, pretende proteger al individuo y a la sociedad de los males derivados de las drogas no institucionalizadas.
+
+Se presta especial atención al conjunto de acciones asociadas de manera directa o indirecta con aquel tipo de consumo de sustancias que pueda ser considerado como delito o como causa de delito, así como a las sanciones legales que pretenden reducirlas. La consecuencia es que el individuo consumidor de drogas no legalizadas, dependiente o no, será percibido como un desviado o, incluso, como candidato a convertirse en delincuente, y de él interesarán únicamente aquellas conductas que están relacionadas con las implicaciones legales del consumo de sustancias (Pinazo, 1993).
+
+Como explican Pastor y López-Latorre (1993), la atención del modelo jurídico no se orienta hacia el análisis detallado de las toxicomanías y, mucho menos, de los factores causales de éstas. Su interés, por el contrario, es subrayar la responsabilidad personal en el acto delictivo, y la responsabilidad de intervención coercitiva que tiene el sistema judicial, que deberá responder mediante sanción legal para garantizar, en la medida de lo posible, la salud pública y la seguridad colectiva. La droga, desde este modelo, es percibida como un elemento peligroso y capaz –en determinadas circunstancias y en manos de determinadas personas– de crear situaciones de riesgo que hagan peligrar la integridad física de los individuos y la salubridad colectiva.
+
+Según este modelo, toda actividad relacionada con drogas no institucionalizadas se convierte en un comportamiento cuanto menos antisocial, si no explícitamente ilegal. El individuo implicado responderá ante el sistema judicial, que se halla preparado para tal fin, y lo hará en función de la gravedad de su falta y de las consecuencias que de ella se deriven. El contexto social podrá tener un papel modulador del delito o del acto antinormativo, atenuando o agravando tanto sus consecuencias como la responsabilidad personal implicada en el mismo. No obstante, el modelo jurídico no incide en el análisis pormenorizado de las interacciones e influencias entre la persona y la droga o entre la persona, la droga y el ambiente. Estos aspectos son considerados en los restantes modelos y cada cual lo hace desde su particular perspectiva interpretativa (Pastor y López–Latorre, 1993).
+
+En cuanto a la intervención en materia de prevención de las toxicomanías, el modelo jurídico enmarca sus acciones dentro del objetivo más amplio de prevención de riesgos colectivos y promoción de la salud. Las medidas legales forman parte de la promoción de la salud, en tanto que ésta es un ámbito de intervención multidisciplinaria, que incluye la acción legislativa en la misma medida que la educativa, la política o la asistencial (Breen y Arnold, 1998). Sin embargo, las medidas de prevención promovidas desde el modelo jurídico tradicional tendrían un carácter eminentemente restrictivo y coercitivo, y estarían operando a través no sólo del sistema legislativo, sino también del judicial y policial.
+
+Este modelo ha sido denominado por algunos autores como "jurídico–represivo", por cuanto representa una perspectiva de lo jurídico orientada hacia la represión y el castigo, con lo que se denota una vocación moralizante (Vega, 1992).
+
+ 
+
+El modelo de la distribución del consumo
+
+Este modelo incide, prioritariamente, en el análisis de la oferta y disponibilidad de una sustancia dada en el seno de una población determinada o de la sociedad en su conjunto. Se refiere sobre todo a las drogas institucionalizadas y enfatiza la importancia de la disponibilidad del producto en el medio social como factor explicativo de su consumo. La problemática del consumo del alcohol y otras drogas puede ser comprendida a partir de considerar la mayor o menor facilidad de acceso a ellas que tengan los ciudadanos. Este hecho es analizado sin entrar en el estudio de los determinantes personales o de otros determinantes sociales que pudieran contribuir al consumo de tóxicos. En todo caso, su principal aportación es analizar las relaciones existentes entre la oferta y el consumo en un medio social dado.
+
+Parker y Harman (1980) señalan que el modelo de distribución del consumo se basa en las siguientes premisas:
+
+• Las drogas institucionalizadas son causantes de gran número de enfermedades y de accidentes que incrementan de modo sustancial las cifras de morbilidad y mortalidad en las sociedades industrializadas.
+
+• El patrón general de consumo de sustancias institucionalizadas en una sociedad dada predice la cantidad de consumidores que abusan o dependen de ellas: cuanto mayor es la media general de consumo, más grande será la proporción de individuos abusadores o adictos.
+
+• El control de la disponibilidad de sustancias tóxicas en la sociedad influirá sobre el número de individuos que abusan de ellas.
+
+• El consumo de sustancias puede verse influido por los cambios en las normas que regulan su distribución. El modelo de distribución del consumo aparece estrechamente vinculado a procedimientos de control legislativo, en el sentido de que depositará su confianza en los recursos legales como medida preventiva; en este caso, dirigidos al control de la disponibilidad de las drogas.
+
+No obstante, este enfoque se diferencia del modelo jurídico en el mayor interés que tiene por las sustancias no institucionalizadas. El modelo de distribución del consumo pretendería reducir los efectos negativos de las sustancias institucionalizadas a través de la regulación de su suministro. Se aboga, en definitiva, por un conjunto de medidas legislativas tendentes a restringir la oferta y la disponibilidad de las drogas en el medio social. En un sentido más amplio, tratarían de reducir la aceptabilidad acrítica que contribuye al consumo masivo de ciertas sustancias.
+
+Algunas de las medidas que han sido propuestas desde esta perspectiva para limitar el consumo son: el aumento de los precios, el control de la publicidad, el incremento de las edades de consumo legal, las restricciones en los horarios de apertura de establecimientos vinculados al consumo, las multas y sanciones a establecimientos que dan servicio a menores de edad, la sanción al consumo en lugares no habilitados o las sanciones penales para conductores ebrios (Elzo, Elorza y Laespada, 1994).
+
+Pese a que el factor de disponibilidad es fundamental para comprender el masivo consumo de alcohol y tabaco en nuestra sociedad, la simple mención a la extensa distribución comercial de estos productos, sin mencionar otros factores psicológicos y sociales, es una explicación incompleta para comprender el consumo abusivo o adictivo en determinados individuos o grupos (Giró, 2007).
+
+ 
+
+El modelo médico tradicional
+
+Considera la dependencia de las drogas como una enfermedad caracterizada por una pérdida del control del individuo sobre su consumo. Esto significa que la dependencia de las drogas es considerada un fenómeno vinculado exclusivamente a procesos internos del propio sujeto y para entenderla bastará apelar a la interacción entre la biología humana y las características farmacológicas de las drogas. Se contempla la drogadicción como un problema médico más, como una enfermedad más, que afecta a un individuo y es causada por la acción de una sustancia psicoactiva sobre los procesos internos –biológicos– de un individuo. Desde este punto de vista, una enfermedad es considerada como un atributo de la persona que la posee (Vuori, 1980; Gil–Lacruz, 2007).
+
+Esta perspectiva interpretativa ha aportado numerosos avances en el conocimiento de las características psicoactivas de las drogas y del proceso bioquímico de la adicción física, así como diferentes procedimientos de base médico–farmacológica que han resultado eficaces para el tratamiento de las adicciones. Además, su principal novedad epistemológica se halla en la consideración del adicto como un enfermo y no como un desviado social. Obviamente, el etiquetado del adicto como "desviado", "vicioso" o "delincuente" es injusto y degradante, además de inapropiado como definición social y científica; por ello, esta consideración debe incluirse entre las aportaciones relevantes de este modelo. No obstante, la misma etiqueta de "enfermo" merecerá una cierta reflexión crítica que expondremos en el párrafo siguiente.
+
+La consideración del adicto como enfermo puede tener un efecto contrario al deseado, pues mantiene el etiquetado alienante del propio adicto además de contribuir poco a su papel activo en el tratamiento. Las personas tienden a crearse una autoimagen muy condicionada por la manera como perciben que son etiquetadas por los demás, siendo la etiqueta social del enfermo fácilmente asociable en nuestra sociedad al rol de pasividad. Por otro lado, la consideración de enfermedad no está libre de valoraciones sociales. La palabra "enfermo" es susceptible de ser usada con un tono claramente despectivo en el lenguaje cotidiano y, en otras ocasiones, podrá ser una manera de estigmatizar a una persona que padece una dolencia física. Aprendemos por socialización que la relación con un enfermo puede ser desagradable, pues al fin y al cabo un enfermo es alguien "distinto".
+
+También cabría preguntarse qué es realmente un enfermo: ¿lo es una persona disléxica?, ¿aquel que tiene una depresión reactiva o un trastorno de la personalidad?, ¿un individuo con un brazo roto?, ¿alguien con fobia a ciertos animales?, ¿un adicto a la nicotina?, ¿un ciego o un sordo? –las asociaciones de ciegos y sordos reivindican ante la sociedad no ser considerados ni tratados como enfermos–, ¿un profesional del baloncesto afectado de gigantismo?, ¿puede considerarse como enferma a una persona homosexual o a una persona transexual? La respuesta no puede ser simplista y dependerá de criterios tanto socioculturales como médicos.
+
+El modelo médico tradicional no constituye una interpretación suficiente para explicar la compleja problemática del consumo de drogas, no sólo por la anterior reflexión crítica sobre la estigmatización del adicto como enfermo, sino por otras carencias:
+
+• El énfasis en las interpretaciones biologicistas e individualistas soslaya aspectos tan importantes para el conocimiento de la conducta de consumo como son los factores sociales. Es un modelo monádico y biologicista, según el cual el problema de la adicción sólo puede entenderse y abordarse desde dentro del sujeto afectado. Aunque no se reconoce explícitamente, se considera que la toxicomanía tiene una etiología idiopática, es decir, un origen desconocido o muy poco clarificable y sólo comprensible por sí mismo, asumiéndose únicamente la posible influencia de factores genéticos (Schuckit, 1986).
+
+• Apenas contempla el consumo abusivo no adictivo, es decir, centra su atención en la drogodependencia. En términos generales, se interesa por el estudio del consumo de drogas como categoría patológica y no como conducta.
+
+• Es un modelo más orientado a la enfermedad que a la salud (Friedman, 2002). No se centra en la salud como objeto final de estudio, sino que éste es la enfermedad. Sin embargo, la concepción contemporánea de la salud, definida por la OMS, entiende que el estudio y tratamiento de la enfermedad ha de ser una parte –muy importante, en todo caso– de un todo que es la consecución plena y global de la salud.
+
+• Propone que la prevención de cualquier enfermedad o dolencia debe basarse en la divulgación entre la población de los conocimientos acumulados por la ciencia acerca de qué factores causan los problemas de salud. La propia investigación científica en el ámbito de las ciencias sociales y de las ciencias de la salud ha comprobado que la información no reduce por sí misma los comportamientos insalubres (Kramer y Cameron, 1975; Salleras, 1985; Heaven, 1996; Sánchez–Vidal, 1998). El modelo médico tradicional presupone que, en función del aprecio que las personas sienten por su salud, el conocimiento de aquello que puede dañarla las disuadirá de llevar a cabo ciertos comportamientos. Sin embargo, es un hecho comprobado que no todas las personas conceden a su propia salud una prioridad destacada dentro de su escala de valores. Habrá quien anteponga a la salud otros valores de constatación más inmediata, tales como la diversión, la aceptación grupal, la imagen, el gusto por el riesgo, entre otros. Esto también dependerá de la etapa del ciclo vital en la que se encuentre cada individuo. En definitiva, la divulgación de la información de temas relacionados con la salud es necesaria en una sociedad libre y avanzada, pero no es suficiente para efectos preventivos. Será necesario también fomentar el aprecio a la propia salud como un valor destacado, mediante estrategias de intervención educativa, pues sólo así la información podrá tener algún efecto preventivo.
+
+• Considera a la salud como la simple ausencia de enfermedad, es decir, la salud consiste simplemente en no estar enfermo y quien tenga un problema de salud será siempre etiquetado como enfermo. Frente a esto, el concepto más actual de salud –definido por la OMS– la entiende como algo más complejo: como un estado completo e integral de bienestar físico, psicológico y social; por lo tanto, la salud es algo más que tener o no una enfermedad. Nótese cómo en la terminología derivada de este modelo se suele usar la palabra "enfermo" para referirse, por defecto, a todo aquel que acude a un profesional de la salud, incluyendo a quien asiste a consulta para hacerse un control periódico del embarazo, para una intervención quirúrgica con fines exclusivamente estéticos, o para que le extraigan una pequeña astilla del ojo. La definición de la OMS pretende, precisamente, hacer hincapié en esta cuestión: que no todos los problemas de salud son enfermedades y que la salud es una experiencia integral de bienestar, superior a la simple ausencia de enfermedad.
+
+ 
+
+El modelo de reducción del daño
+
+Es complejo definir un concepto como el de reducción del daño, que abarca campos tan distintos como la terapéutica de las drogadicciones, el significado y papel social de las drogas o la consideración moral de su consumo. Heather et al. (1993) se refieren a él como un intento de aminorar las consecuencias adversas que sobre la salud, lo social o lo económico tiene el consumo de drogas, sin requerir, necesariamente, la reducción de su consumo. El concepto de "consumo responsable" emerge como propuesta fundamental de esta perspectiva interpretativa.
+
+La reducción de daños puede ser vista como un objetivo de un programa de tratamiento –por ejemplo, los programas de mantenimiento con metadona–, pero también como un acercamiento ético y pragmático a la problemática social de las drogas, que hace hincapié en reducir las consecuencias negativas del uso de sustancias más que en promover la abstinencia. En ambos casos, uno de los puntos clave es que el consumo de drogas en cada persona concreta es aceptado como un hecho que surge de su decisión particular. El objetivo será que dicho consumo tenga los mínimos efectos negativos posibles para las personas y para la sociedad.
+
+Las premisas básicas de esta perspectiva pueden resumirse así (Riley y O'Hare, 2000):
+
+• La persona tiene derecho a consumir drogas. A los profesionales y a las autoridades les compete disponer las condiciones que reduzcan los daños físicos, psicológicos y sociales que a la persona le puede reportar su consumo, así como reducir la incidencia negativa sobre el resto de los individuos.
+
+• El consumo de drogas en la sociedad en general es inevitable, a pesar de todos los esfuerzos que se han realizado para evitarlo. El consumo resulta gratificante para la persona y la sociedad no tiene derecho a reprimirlo.
+
+• El daño es lo importante, no el consumo en sí mismo.
+
+• El ejercicio de las actividades terapéuticas es más fácil y menos costoso, pues se interviene para reducir el daño y no para dar tratamiento que modifique el comportamiento, el carácter o las actitudes de la persona.
+
+• No se rechaza la abstinencia como meta para quien la desee o le convenga. Lo que ocurre es que la intensidad de la intervención se dirigirá hacia la protección a corto plazo para la comunidad –del eventual riesgo producido por el consumidor– y para el propio consumidor.
+
+Las intervenciones propuestas para la reducción del daño incluyen la puesta en marcha de acciones diversas, tales como las siguientes:
+
+• Programas basados en el suministro de metadona y otros opiáceos sintéticos a las personas adictas a heroína con la finalidad de evitar el consumo adulterado de esta droga cuando se obtiene en el mercado negro y reducir la incidencia del riesgo de contagio viral. entregar.
+
+• Programas basados en la provisión de jeringuillas y agujas estériles a quienes consumen drogas por vía parenteral.
+
+• Disposición de "áreas de tolerancia", lugares específicamente habilitados para que los consumidores puedan obtener instrumental de inyección limpio, preservativos, información y atención médica.
+
+• Programas educativos basados en la reducción de daños. Se trata de materiales y estrategias que informan a los jóvenes acerca de cómo reducir los riesgos asociados al uso recreativo de drogas. Se incide en el conocimiento exhaustivo de las características y los efectos de las drogas de uso más común.
+
+• Trabajo de campo dirigido a contactar con jóvenes consumidores para informarles acerca de las características de los productos que consumen. Se analizan químicamente las sustancias y se distribuye material informativo.
+
+• Demanda de la legalidad controlada de ciertas sustancias institucionalizadas –especialmente, cannábicos– con la finalidad de eliminar los problemas de criminalidad asociados tanto a la demanda como a la oferta.
+
+La vocación de evitar la criminalización del consumidor de sustancias no institucionalizadas debe verse al menos como una aportación bienintencionada de este modelo interpretativo. Del mismo modo debe considerarse la reducción de riesgos inherente a los programas de mantenimiento con metadona, provisión de jeringuillas, etcétera. No obstante, creemos necesario señalar algunas reflexiones críticas al respecto:
+
+• El suministro de metadona y otras sustancias sustitutivas es una manera de intercambiar la adicción a heroína adulterada por otra adición médicamente controlada.
+
+• Las drogas no pierden su capacidad tóxica por el hecho de que su consumo reciba la calificación social de "responsable". Se ha señalado el hecho comprobado de que la información objetiva es una variable carente de poder suficiente para reducir la probabilidad de consumo abusivo.
+
+• También se ha mencionado que las drogas institucionalizadas, pese a su estatus legal, son causa de morbilidad y mortalidad en mayor medida que las sustancias ilegales, pues el factor de disponibilidad social incrementa la probabilidad de consumo.
+
+Por otra parte, aunque esta interpretación reductora de daños coincida con las reivindicaciones de algunos sectores progresistas, es preciso señalar que, en su filosofía de fondo, este modelo coincide con los principios neoliberales de no intervencionismo, individualismo, reducción de gastos públicos y liberalización mercantil. Del mismo modo, la consideración fatalista del consumo de drogas como un hecho inevitable recuerda también a la ética neoliberal en el sentido de aceptar las desigualdades como un hecho inevitable e inherente a la dinámica social y a la libertad de cada individuo para elegir su propio destino.
+
+ 
+
+El modelo de la privación social
+
+Atiende fundamentalmente a las condiciones socioeconómicas en que tiene lugar el consumo de una determinada sustancia. Sin embargo, lo económico se contempla de manera limitada y se prioriza la relación del consumo de drogas con las clases sociales más deprimidas. De esta manera se sugiere que factores tales como la pobreza, la discriminación o la carencia de oportunidades, que pueden aparecer como producto de la sociedad urbana industrializada, se convierten en terreno abonado para la aparición del fenómeno del consumo de drogas.
+
+Autores como Faupel (1988) hablan de una cultura de las drogas definida en términos de separación y aislamiento con respecto a las normas y comportamientos sociales convencionales. El consumo de drogas se convierte, en el seno de determinados grupos, en un símbolo visible de identidad e identificación, así como en la manifestación del rechazo a la norma convencional, lo cual constituye un modo de transgresión voluntaria de la normativa convencional.
+
+Por su parte, otros autores como Ventosa (1990) han señalado que el alcohol y otras drogas actúan como objetos sustitutivos de la satisfacción de necesidades sociales y económicas, como liberadores de la tensión provocada por no encontrar en la sociedad la manera y el lugar para desarrollar la propia "libido social". Las drogas permiten, a través de sus efectos psicoactivos, una evasión de la realidad frustrante o bien un medio de obtener gratificaciones que suplen, al menos de manera momentánea, la insatisfacción vital y el sentimiento de frustración.
+
+La relación drogas-privación se puede explicar, pues, tanto por el significado social transgresor como por la experiencia psicoactiva ansiolítica y liberadora de gratificaciones corporales y psicológicas.
+
+Las condiciones de vida de los individuos involucran aspectos económicos, laborales, materiales, así como las prioridades de valor, las normas grupales y las propiedades relacionales del entorno. Pero también involucran las oportunidades de obtener gratificaciones en la vida social y la posibilidad de satisfacer derechos básicos. Por todo ello, las oportunidades están socialmente condicionadas por la estructura social objetiva (Cockerham, Abel y Lüschen, 1993).
+
+Desde esta perspectiva interpretativa se proponen medidas tendentes a reducir o eliminar los factores ambientales que puedan favorecer el consumo abusivo de sustancias o la toxicomanía. Esto supondría la reducción de tensiones sociales y económicas y de las condiciones causantes de frustración y falta de oportunidades para los individuos y los grupos, así como la promoción de condiciones que faciliten la igualdad y bienestar social para todos los sectores sociales.
+
+Este modelo reduce la problemática de las drogas a una causalidad esencialmente económica y la misma perspectiva económica la restringe a una relación pobreza–drogas, al tiempo que estigmatiza a las clases más deprimidas como consumidoras de drogas (Ramírez, 1991). Por el contrario, se ha comprobado en España que el consumo de sustancias no tiene una mayor incidencia en las comunidades vecinales con más problemas económicos (Pons, Pinazo y Carreras, 2002), así como que entre los adolescentes el consumo de bebidas alcohólicas aumenta en los grupos con un nivel adquisitivo alto (Pons y Berjano, 1999). Con muestras mexicanas de población urbana se ha hallado recientemente que el consumo de alcohol y el consumo extra médico de fármacos ansiolíticos es menor en personas de nivel socioeducativo bajo, aunque en estos segmentos sociales hay una mayor cantidad de consumidores abusivos de alcohol y de marihuana (Medina–Mora et al., 2004; Fleiz etal., 2007).
+
+A partir de estos datos puede deducirse que la relación entre pobreza y drogas no es unívoca ni necesaria. En todo caso, la eliminación de factores que dificulten el bienestar social para todos los sectores sociales debería ser un objetivo social básico, con independencia de su incidencia específica sobre la conducta de consumo de drogas.
+
+ 
+
+El modelo los factores socioestructurales
+
+Esta perspectiva asume que el consumo de drogas forma parte de los estilos de vida de una persona, y éstos, a su vez, están íntimamente vinculados a los estilos de vida de sus grupos de referencia. Los estilos de vida saludable suponen unas elecciones personales, aunque condicionadas por determinados factores socioestructurales ligados al estilo de vida del grupo social, es decir, vinculadas a un tipo de estilo de vida colectivo (Abel, 1991; Erben, Franzkowiak y Wenzel, 1992). Así, el consumo de diferentes drogas variará en grupos sociales distintos en función del sexo, la edad, la profesión, el grado de educación, el lugar de residencia o de procedencia y el momento histórico, entre otros factores. A partir de estas premisas se realizarán descripciones pormenorizadas del consumo de diversas drogas en distintos grupos sociales en función de los mencionados factores socioestructurales.
+
+Las dinámicas de funcionamiento grupal determinan el papel que debe desempeñar cada individuo y los patrones o pautas de comportamiento a que debe ajustarse. Considerarlo desde esta perspectiva, es decir, en función de la posición relativa que ocupa en los diferentes grupos de referencia, implica que el sujeto queda vinculado a su entorno y a la realidad social en que vive y desarrolla su actividad (Pastor y López–Latorre, 1993).
+
+Las presiones hacia la conformidad grupal actúan como elemento que sustenta formas de conducta y de pensamiento –actitudes–. El compromiso con el grupo de referencia supone la adopción de aquellos modos de comportamiento susceptibles de satisfacer unas determinadas expectativas de los demás (Van Avermaet, 1992).
+
+La interpretación socioestructural aporta una visión de profundidad a la problemática de las drogas, ya que toma en consideración la vinculación de la conducta de consumo a factores supraindividuales y no sólo de índole económica. En términos generales, podemos contemplar las bondades de esta aportación en los siguientes hechos (Pons, 2007):
+
+• La consideración de factores que van más allá de los rasgos individuales como explicativos del consumo de drogas.
+
+• La concepción del ser humano como un ser social, sometido a determinadas influencias de su ambiente sociocultural.
+
+• La descripción de las diferentes pautas de consumo de distintas sustancias en diversas sociedades y grupos sociales a partir de los métodos de investigación que aportan las ciencias sociales.
+
+• La visión de la problemática de las drogas como un fenómeno social y grupal y no sólo como un problema individual.
+
+No obstante lo anterior, esta interpretación soslaya los factores psicológicos que pueden dar muestra de la conducta de consumo y que pueden explicar por qué dentro de un mismo grupo socioestructural no todos los individuos presentan la misma probabilidad de consumir o de hacerlo con la misma intensidad. Del mismo modo, su interpretación alude más a la descripción de pautas de ocurrencia en una determinada sociedad o en unos determinados grupos sociales, que a la explicación de las causas del consumo de drogas. Es, por tanto, un punto de vista más descriptivo que explicativo.
+
+ 
+
+El modelo de educación para la salud
+
+Desde esta perspectiva se contempla el consumo de drogas como un problema que afecta a la salud física, psíquica y relacional de las personas y que puede ser reducido mediante procedimientos educativos. Green (1984) explica que la educación para la salud es la disciplina que se encarga de transmitir conocimiento acerca de los comportamientos específicos que suponen un riesgo para la salud y sobre aquellos otros que, por el contrario, favorecen y protegen la salud.
+
+Este enfoque coincide con el modelo médico tradicional en la confianza depositada sobre la transmisión de información a la sociedad como una estrategia reductora de la incidencia del consumo de sustancias. No obstante, enfatiza más los aspectos educativos y comunicativos implicados en este proceso de transmisión de información, y no plantea una simple divulgación de información. Es, además, un planteamiento más interventivo que descriptivo o conceptualizador, así como más orientado a la salud integral que a la patología.
+
+Las intervenciones educativas e informativas se dirigen a cuatro ámbitos:
+
+• El ámbito educativo propiamente dicho. En los centros educativos para niños y adolescentes son los profesores quienes asumen la responsabilidad de educar a los alumnos en la protección de la salud.
+
+• El ámbito mediático. Se refiere a campañas en los medios de comunicación de masas dirigidas a destacar los riesgos asociados al consumo de sustancias.
+
+• El ámbito comunitario. Incluye actuaciones en servicios sociales y comunitarios, puntos de información, programas con educadores de calle o centros juveniles, entre otros.
+
+• El ámbito sanitario. En los centros de salud la responsabilidad de transmitir conocimiento sobre este tema corresponde al médico.
+
+Como se apuntó antes, se pone especial interés en la capacidad persuasiva del mensaje educativo o comunicativo, en la metodología comunicativa y pedagógica utilizada y, en general, en la calidad del proceso de transmisión de información dirigida a modificar las intenciones conductuales de las personas.
+
+Siguiendo a Pastor, Balaguer y García–Merita (1999), se pueden distinguir tres tipos de estrategias interventivas en el modelo de educación para la salud:
+
+• Mensajes inductores de miedo. Se trata de comunicaciones que pretenden motivar a sus receptores a cambiar la conducta perjudicial a través de la inducción de miedo. Las apelaciones emocionales a los riesgos que comporta el consumo de drogas son utilizadas como técnica disuasiva.
+
+• Mensajes informativos objetivos. En este caso se utiliza información sobre las drogas con la finalidad de que los individuos receptores conozcan con rigor las consecuencias que se pueden derivar de su consumo. Son mensajes con una intención más objetiva que los llamamientos al miedo. Se busca adaptar el lenguaje comunicativo utilizado a las características del público receptor para que el mensaje aumente su capacidad persuasiva.
+
+• Procedimientos de modificación de conducta. Se usan en la relación directa entre el profesional de la salud y la persona consumidora o potencialmente consumidora. El objetivo es reforzar los comportamientos saludables y modificar las creencias irracionales del individuo acerca de los motivos que le orientan a consumir sustancias.
+
+En cuanto a los llamamientos al miedo, cabe decir que su incidencia sobre el comportamiento humano no estriba tanto en la intensidad aversiva contenida en el mensaje disuasivo, como en el temor real que suscita en el receptor. Los mensajes capaces de provocar más temor –y, por tanto, una mayor motivación al cambio actitudinal– son los que incluyen una intensidad moderada de información aversiva, pues los muy intensos son percibidos por el receptor como poco realistas y los escasamente intensos no llegan a suscitar el deseado temor (Pons, 2007).
+
+ 
+
+El modelo psicológico individualista
+
+Pone el énfasis en el individuo contemplando la complejidad y variabilidad de cualquier conducta humana. El consumo de drogas es entendido como una forma más de comportamiento y, por tanto, puede ser explicado desde los mismos principios que rigen cualquier otra conducta humana, pudiéndose aplicar a tal fin los conocimientos acumulados por las ciencias del comportamiento (Nowlis, 1982). La conducta de consumo de drogas no puede interpretarse, desde este modelo, sin estudiar los rasgos de personalidad, las necesidades particulares, las actitudes, los valores, los hábitos de conducta o los estilos de relación social del individuo consumidor.
+
+Desde esta interpretación se toma en consideración la idea de predisposición psicológica hacia el cuidado de la salud. La disposición de una persona para llevar a cabo determinadas conductas relacionadas con su salud estará condicionada por factores psicológicos tales como la evaluación de costos y beneficios de la acción a desarrollar, la susceptibilidad percibida a una enfermedad o dolencia particular o la percepción particular sobre la gravedad de las consecuencias de tales conductas (Becker et al., 1977). Los estilos de vida promotores de la salud se conceptualizan como un patrón multidimensional de acciones autoiniciadas y de percepciones que permiten a cada individuo mantener su desarrollo personal de la manera particular que considera deseable (Pender, 1987).
+
+A partir de lo anterior, podemos enumerar una serie de principios que ayuden a comprender mejor el problema del consumo de drogas desde la interpretación psicoindividualista (Pons y Berjano, 1999):
+
+• El consumo de sustancias satisface en el individuo alguna necesidad física, psicológica o social, y la dificultad de una persona para satisfacer estas necesidades por otros medios explica la adicción psicológica.
+
+• Determinadas variables psicológicas actúan como factores predisponentes de la conducta de consumo y de adicción, tales como rasgos de personalidad, estructura motivacional –jerarquía de valores mantenida por el individuo– o actitudes hacia las drogas –lo que piensa o espera de ellas–.
+
+• Si el consumo de drogas es un comportamiento humano más, podrá ser comprendido a través de la aplicación de los mismos principios que rigen la conducta humana en general. Para tal fin se podrán utilizar los conocimientos acumulados por la investigación en las ciencias del comportamiento.
+
+• La información por sí sola no influye necesariamente sobre el comportamiento: por lo tanto, la difusión de información no será una estrategia preventiva suficiente. La prevención debe basarse en el individuo en su conjunto, en promover su desarrollo personal, la satisfacción de sus necesidades, su equilibrio y su madurez.
+
+• El consumo de drogas varía sus pautas entre individuos diferentes y en situaciones o momentos distintos de un mismo individuo, por lo que no se reduce únicamente a un problema de adicción. Desde esta perspectiva se estudia la conducta de consumo de drogas y no exclusivamente la adicción.
+
+Las variables psicológicas que actúan como factores predisponentes son consideradas como factores de riesgo. Un factor de riesgo del consumo de drogas es una variable cuya presencia en un individuo incrementa en él la probabilidad de consumo. De este modo, podrá saberse que características de personalidad hacen más probable el consumo, así como que disposiciones motivacionales o que expectativas sobre las drogas lo hacen. La comprensión de los factores de riesgo permite contemplar el problema asociado a sus antecedentes más probables, y articular de este modo explicaciones causales de la vulnerabilidad individual al consumo abusivo o adictivo (Jessor, 1991; Bell, Forthum y Sun, 2000).
+
+Aun sin desdeñar el valor de las aportaciones del modelo psicoindividualista, es preciso señalar que esta interpretación no resulta del todo suficiente para explicar, en su completa extensión, la problemática del consumo de drogas. Analizaremos brevemente las dos principales críticas teóricas que pueden contemplarse:
+
+• Se trata de un modelo monádico, que contempla al individuo en su integridad psicológica, pero que olvida el estudio exhaustivo de las influencias sociales y culturales que condicionan la conducta. No toma en consideración suficientemente los factores y condicionantes supraindividuales que explican por qué una persona es lo que es y hace lo que hace. Es, por tanto, una interpretación teórica incompleta. La interpretación psicoindividualista comprime los límites dentro de los cuales se desarrolla el individuo, reduciendo la importancia de lo social (Musitu, 1998). Será muy difícil comprender lo que los individuos llegan a ser en cualquier ámbito de la vida social sin hacer referencia al armazón social, cultural e histórico bajo el cual se organizan y toman forma los entornos de su vida cotidiana.
+
+• Al definir las características psicológicas que es más probable encontrar en una persona adicta, se nos presenta el perfil de un individuo con importantes problemas de adaptación socioemocional: inmadurez emocional, inestabilidad, dificultades en la formación de la autoestima (Ellis et al., 1988; Kessel y Walton, 1989). Estos rasgos caracteriológicos son fruto de la investigación rigurosa y, por tanto, informan de modo realista sobre aquello que suele hallarse al analizar la personalidad de una persona adicta. Sin embargo, el excesivo énfasis en el rasgo individual puede acarrear el riesgo de perder de vista la influencia de lo social y presentar el perfil de un sujeto emocionalmente inmaduro, inestable o con dificultades de adaptación social –es decir, estigmatizar, en este caso, al adicto como un sujeto "raro"–, olvidando que existen numerosas presiones sociales que pudieron llevar a ese individuo a iniciar y mantener su consumo de sustancias (Freixa, 1993).
+
+ 
+
+El modelo socioecológico
+
+Su punto de partida se halla en la idea de que las actuaciones humanas dependen, en gran medida, de contextos más amplios. La conducta humana es el resultado de la progresiva acomodación mutua entre un ser humano activo, en desarrollo, y las propiedades cambiantes de los entornos inmediatos en los que vive, ya que este proceso de acomodación se ve afectado por las relaciones que se establecen entre esos entornos y por los contextos más amplios en los que están incluidos los entornos (Bronfenbrenner, 1979). Desde esta perspectiva, la salud no puede definirse en el individuo per se, sino por referencia a su entorno total: físico, social, económico, cultural… En este sentido, la salud no es un atributo del individuo mismo, sino de su interacción con el campo de fuerzas y relaciones en que se desarrolla su conducta (Sánchez–Vidal, 1998). Así, los estilos de vida saludable de una persona estarán definidos por una serie de factores interrelacionados, tales como: características individuales y del entorno microsocial inmediato –familia, amigos, trabajo, comunidad, entre otros–, factores macrosociales –sistema social, cultura de valores imperante, medios de comunicación– y medio físico geográfico en que se desarrolla la conducta de los individuos.
+
+Este modelo se fundamenta en considerar una serie de interrelaciones e interdependencias complejas entre el sistema orgánico, el sistema comportamental y sistema ambiental. Al hablar de ambiente no sólo se contemplan los factores físicos y sociales, sino también las percepciones y cogniciones que tienen las personas sobre aquél, es decir, el sentido y significado que el ambiente adquiere para las personas que interaccionan en él y con él. Así, se tomarán en consideración tanto aspectos físicos, biológicos y psicológicos como sociales, etnoculturales, económicos y políticos. Por lo tanto, si se pretende comprender el complejo mecanismo del consumo de drogas es necesario implicar dentro de este proceso las características personales del consumidor y las múltiples características socioambientales que le rodean.
+
+La explicación socioecológica pretende superar las insuficiencias y limitaciones de los otros modelos, y a la vez recoger e integrar las aportaciones relevantes de ellos. El modelo socioecológico redimensiona el problema del consumo de drogas como fenómeno global y problema social que incluye al individuo, a la familia, a la comunidad, a la sociedad, al sistema histórico-cultural, al sistema político, al sistema económico, al sistema jurídico y al propio producto y sus efectos sobre un individuo que desarrolla su comportamiento en un marco ambiental definido por los anteriores contextos.
+
+No obstante, la explicación socioecológica no debería ser tomada como una especie de "cajón de sastre" en el que cabe todo aquello que tiene diferente ubicación en los diferentes modelos interpretativos. La explicación socioecológica tiene sentido por sí misma, por cuanto contempla a los consumidores y a los factores no de forma aislada, sino integrados dentro de una estructura ambiental más amplia que les otorga sentido, y de la que, a su vez, son creadores.
+
+El consumo de drogas se interpreta desde la interacción de tres constelaciones de factores explicativos: a) la droga: los efectos psicoactivos y el significado social de la droga; b) la persona: las características psicológicas y orgánicas del sujeto consumidor; c) el ambiente: las características de los contextos en que se encuentra integrado ese sujeto a lo largo de su ciclo vital (Berjano y Musitu, 1987). Será fundamental el concepto de interacción entre los tres factores mencionados, pues éstos no deberán ser contemplados de manera aislada, sino interrelacionados, es decir, influyéndose mutuamente, repercutiendo unos sobre otros. A modo de ejemplos: las características de la persona están influidas por su ambiente, el cual también influirá en la definición del significado social de la droga; los efectos psicoactivos motivarán al consumo de una sustancia según cuáles sean las características y necesidades de la persona y del ambiente inmediato.
+
+Lo anterior sugiere la actuación de factores de riesgo, entendidos como variables predisponentes, concepto ya explicado cuando se expuso el modelo psicoindividualista. Desde la perspectiva socioecológica el factor de riesgo se amplia, necesariamente, a lo microsocial y macrosocial. Un factor de riesgo no sólo hay que buscarlo en la persona, sino también en sus entornos. Además de esto, los factores de riesgo no se contemplan de manera aislada, sino interrelacionados, como constelaciones de fuerzas que influyen de modo conjunto e interrelacionado sobre la conducta de un individuo (Pérez de Arróspide, 1998). Así, pueden aparecer factores de riesgo que, a su vez, mantienen una relación causal con otro de su misma especie. Por ilustrarlo con un ejemplo, la vulnerabilidad a la presión grupal es un rasgo de personalidad que aumenta la probabilidad de iniciar el consumo de sustancias, pero este rasgo puede estar originado por las experiencias socializadoras del individuo en su familia; de este modo, la conducta final es consecuencia no sólo de factores de la persona, sino también de factores sociales relacionados causalmente con lo individual.
+
+Podemos referirnos al modelo etiológico del consumo de drogas propuesto por Edwards, Arif y Hodgson (1982). Este consumo se conceptualiza como una conducta que resulta de un complejo campo de fuerzas en el que se integran las características de la persona y las de sus ambientes. Se diferencian factores sociales y factores individuales, los cuales, a su vez, podrán operar como antecedentes previos o como antecedentes inmediatos. De este modo, estos autores proponen que el consumo de drogas encontrará los siguientes factores etiológicos:
+
+• Factores sociales:
+
+• Antecedentes previos: integración con el grupo, interacción familiar y uso de drogas en la familia.
+
+• Antecedentes inmediatos: normas sociales del grupo, disponibilidad de la droga y variables demográficas.
+
+• Factores individuales:
+
+• Antecedentes previos: experiencia precoz con drogas, desarrollo psicológico y rasgos de personalidad.
+
+• Antecedentes inmediatos: estados de ánimo susceptibles de ser modificados por el efecto psicoactivo de una droga.
+
+Del mismo modo, consideramos de interés referirnos a las propuestas etiológicas explicativas aportadas por autores como Asun y Alvarado (1991) o Ramírez (1991), surgidas de la reflexión y análisis del problema del consumo de drogas en América Latina. En el cuadro 1 se sintetiza esta explicación, cuya comprensión, de nuevo, requiere la consideración de la interacción entre los factores y su repercusión mutua.
+
+
+
+
+La conducta de consumo de drogas aparece, desde esta perspectiva, como el producto de un complejo campo de fuerzas. El modelo socioecológico pretende revalorizar al ser humano en su esencia como ser social y cultural, y atiende al problema de las drogas como un fenómeno multidimensional, lo que posibilita buscar y descubrir nuevas alternativas de intervención que permitan reducirlo y controlarlo a través de atacar sus causas en diferentes niveles de profundidad. En este sentido, el fenómeno del consumo de drogas se redimensiona como problema social.
+
+En todo caso, el modelo socioecológico no propone una explicación basada en el determinismo contextualista, según la cual el individuo fuera una simple copia de su ambiente o un simple efecto pasivo de lo que ocurre a su alrededor. Al contrario, se parte siempre de la noción de las personas como sujetos activos en la definición de sus conductas –aun cuando reciban las influencias del medio sociocultural–. Al fin y al cabo, la sociedad, los grupos sociales y la cultura no son otra cosa que individuos en acción, lo cual nos lleva a pensar que, así como lo social repercute notablemente sobre lo individual, las personas y su actividad son las que crean y definen a la sociedad.
+
+La prevención dentro de este modelo es asumida de manera integral y la acción interventiva se dirige hacia las causas del problema y no sólo hacia los síntomas. La intervención se conceptualiza desde la prevención primaria, entendida como una tentativa científica dirigida a conocer los factores posibilitadores de un problema social –factores de riesgo– y a tratar de reducir su probabilidad de aparición. Es decir, la prevención primaria se contempla como una acción anticipadora a los factores de riesgo para reducir su aparición y, de este modo, aminorar la incidencia de la conducta desajustada. Las actuaciones preventivas tendrán las siguientes características:
+
+• Se actúa sobre el factor de riesgo, intentando encontrarlo en los mayores grados posibles de profundidad. De este modo, si, por ejemplo, la investigación determina que ciertos rasgos de personalidad aumentan la probabilidad de consumo precoz en un menor o de desarrollo de la conducta adictiva en un adulto, habrá que buscar qué condiciones ambientales operan, a su vez, como antecedentes etiológicos de esos rasgos –experiencias de socialización familiar desde la infancia, etcétera–, con el objetivo de intervenir sobre ellos para orientarlos en la dirección adecuada.
+
+• Se consideran las experiencias socializadoras de los sujetos como vectores de fuerza que condicionan su comportamiento social. Se tratará de intervenir sobre estos vectores más que sobre las intenciones conductuales del potencial consumidor de drogas.
+
+• Las intervenciones preventivas comienzan desde la infancia, pues el concepto de prevención primaria se convierte en inespecífico, orientado al desarrollo integral del individuo y no únicamente a la evitación de una conducta concreta.
+
+En este contexto metodológico y teórico se han propuesto acciones de intervención en el ámbito de lo social y de lo educativo, entre las que destacamos las siguientes, como una muestra representativa de las propuestas que ofrece la perspectiva socioecológica. Este tipo de acciones tiene como denominador común la búsqueda de la causa más que la intervención directa sobre la intención conductual:
+
+• Aportar a los padres los recursos y competencias necesarios para que las estrategias de socialización a las que someten a sus hijos se orienten hacia el fomento de factores de protección y la evitación de factores de riesgo. Un modelo representativo de trabajo es el de las escuelas de padres y madres, instancia educativa donde los progenitores con hijos pequeños aprenden estrategias basadas en los conocimientos de las ciencias de la conducta y de la educación, con la finalidad de adquirir competencias y recursos suficientes para educar a sus hijos (Pinazo, 1993).
+
+• Proponer a la sociedad en su conjunto un análisis crítico –aunque pausado, objetivo y no moralizante– de los usos y costumbres que legitiman el consumo de sustancias institucionalizadas. El comportamiento humano no es ajeno a las influencias de factores macrosociales que definen las características históricas, políticas y etnográficas de una sociedad. Los comportamientos cotidianos se asientan no sólo en decisiones individuales e influencias microsociales, sino también en estos otros factores de amplio alcance. Por ello, no puede desdeñarse el conocimiento amplio sobre los condicionantes que llevan a una actitud acrítica ante las drogas de uso común que, por otra parte, son las que facilitan el aprendizaje en el consumo de sustancias (Melero, 1993).
+
+• Fomentar una cultura de la utilización racional del ocio y el tiempo libre. Se desarrollan programas de intervención comunitaria orientados a la creación de posibilidades de ocio nocturno dirigidas a adolescentes y jóvenes, que ofrezcan alternativas al ocio basado en el mercantilismo y el consumo de sustancias.
+
+ 
+
+Bibliografía
+
+Abel, Thomas. 1991 "Measuring health lifestyles in a comparative analysis: theoretical issues and empirical findings", en Social Science and Medicine, núm. 32, pp. 899–908.         [ Links ]
+
+American Psychiatric Association. 2002 DSM–IV–TR. Manual diagnóstico y estadístico de los trastornos mentales, Barcelona, Masson.         [ Links ]
+
+Asun, Domingo y R. Alvarado. 1991 "Aspectos médicos y sociales del consumo de drogas", en Domingo Asun, J. Alfaro, R. Alvarado y G. Morales, comps., Drogas, juventud y exclusión social, Santiago de Chile, Universidad Diego Portales.         [ Links ]
+
+Becker, Marshall, S.M. Radius, J.P. Kirsht, D.P. Haefner y R.H. Drachman. 1977 "The health belief model and prediction of dietary compliance: A field experiment", en Journal of Health and Social Behaviour, 182 núm. 18, pp. 348–366.         [ Links ]
+
+Bell, Nancy, L.F. Forthum y S. Sun. 2000 "Attachment, adolescent competencies, and substance use: Developmental considerations in the study of risk behavior", en Substance Use and Misuse, núm. 35, pp. 177–206.         [ Links ]
+
+Berjano, Enrique y G. Musitu. 1987 Las drogas: Análisis teórico y métodos de intervención, Valencia, Nau Llibres.         [ Links ]
+
+Breen, Laurel y J. Arnold. 1998 "Agents for health promotion", en Sherri Gorin y J. Arnold, comps., Health promotion handbook, San Luis, Missouri, Mosby.         [ Links ]
+
+Bronfenbrenner, Urie. 1979 The ecology of human development, Cambriedge, Harvard University Press.         [ Links ]
+
+Cockerham, William, T. Abel y G. Lüschen. 1993 "Max Weber, formal rationality and health lifestyles", en The Sociological Quarterly, núm. 34, pp. 413–425.         [ Links ]
+
+Edwards, Griffith, A. Arif y R. Hodgson. 1982 "Nomenclature and classification of drug and alcohol related problems: A shortened version of a World Health Organization memorandum", en British Journal of Addictions, núm. 77, pp. 3–20.         [ Links ]
+
+Ellis, Albert, J.F. McInerney, R. DiGiuseppe y R.J. Yeager. 1988 Rational–emotive therapy with alcoholics and substance abusers, Nueva York, Pergamon.         [ Links ]
+
+Elzo, Javier, M.A. Elorza y M.T. Laespada. 1994 Alcoholismo juvenil, Bilbao, Deustuko Unibertsitatea.         [ Links ]
+
+Erben, Rosmarie, P. Franzkowiak y E. Wenzel. 1992 "Assessment of the outcomes of health intervention", en Social Science and Medicine, núm. 35, pp. 359–365.         [ Links ]
+
+Faupel, Charles. 1988 "Heroin use, crime and employment status", en Journal of Drug Issues, núm. 18, pp. 467–479.         [ Links ]
+
+Fleiz, Clara, G. Borges, E. Rojas, C. Benjet y M.E. Medina–Mora 2007 "Uso de alcohol, tabaco y drogas en población mexicana: Un estudio de cohortes", en Salud Mental, núm. 30, pp. 63–73.         [ Links ]
+
+Freixa, Francesc. 1993 El fenómeno droga, Barcelona, Salvat.         [ Links ]
+
+Friedman, Howard. 2002 Health psychology, Upper Saddle River, Nueva Jersey, Pearson Education.         [ Links ]
+
+Gil–Lacruz, Marta. 2007 Psicología social: un compromiso aplicado a la salud, Zaragoza, Universidad de Zaragoza.         [ Links ]
+
+Giró, Joaquín. 2007 Adolescentes: ocio y consumo de alcohol, Madrid, Entinema.         [ Links ]
+
+Green, Lawrence. 1984 "Health education models", en Joseph D. Matarazzo, S.M. Weiss, J.A. Herd y N.E. Miller, comps., Behavioral health: a handbook of health enhancement and disease prevention, Nueva York, Wiley.         [ Links ]
+
+Heather, Nick, A. Wodak, E. Nadelmann y P. O'Hare. 1993 Psychoactive drugs and harm reduction: from faith to science, Londres, Whurr.         [ Links ]
+
+Heaven, Patrick. 1996 Adolescent health: the role of individual differences, Londres, Routledge.         [ Links ]
+
+Jessor, Richard. 1991 "Risk behavior in adolescent: a psychosocial framework for understanding and action", en Journal of Adolescent Health, núm. 12, pp. 597–605.         [ Links ]
+
+Kessel, Neil y H. Walton. 1989 Alcoholism. A reappraisal: its causes, problems and treatment, Londres, Penguin Books.         [ Links ]
+
+Kramer, John y D.C. Cameron. 1975 Manual on drug dependence, Ginebra, World Health Organization.         [ Links ]
+
+Medina–Mora, María–Elena, J. Villatoro, P. Cravioto y C. Fleiz. 2004 "Uso y abuso de alcohol en México. Resultados de la Encuesta Nacional de Adicciones", en Observatorio mexicano en tabaco, alcohol y otras drogas, México, Conadic.         [ Links ]
+
+Melero, Juan–Carlos. 1993 "El uso inadecuado de alcohol como prioridad preventiva", en Psiquis, núm. 14, pp. 203–210.         [ Links ]
+
+Musitu, Gonzalo. 1998 "La indisociabilidad de la intervención comunitaria y de la perspectiva ecológica", en Informació Psicològica, núm. 66, pp. 4–9.         [ Links ]
+
+Nowlis, Helen. 1982 Drugs demystified, París, Unesco.         [ Links ]
+
+Parker, Douglas y M.S. Harman. 1980 "A critique of the distribution of consumption model of prevention", en Thomas Harford, D.A. Parker y L. Light, comps., Normative approaches to the prevention of alcohol abuse and alcoholism, Washington, U.S. Superintendent of Documents.         [ Links ]
+
+Pastor, Juan–Carlos y M.J. López–Latorre. 1993 "Modelos teóricos de prevención en toxicomanías: Una propuesta de clasificación", en Anales de Psicología, núm. 9, pp. 19–30.         [ Links ]
+
+Pastor, Yolanda, I. Balaguer y M. García–Merita. 1999 Estilo de vida y salud, Valencia, Albatros.         [ Links ]
+
+Pender, Nola. 1987 Health promotion in nursing practice, Norwall, Appleton–Century–Crofts.         [ Links ]
+
+Pérez de Arróspide, Jesús. 1998 "Drogodependencias: la prevención desde y con la familia", en José A. García–Rodríguez y C. López, comps., Nuevas aportaciones a la prevención de las drogodependencias, Madrid, Síntesis.         [ Links ]
+
+Pinazo, Sacramento. 1993 Propuesta para un programa de prevención del consumo de drogas en niños en edad escolar dirigido a los padres, tesis doctoral dirigida por Enrique Berjano y G. Musitu, Valencia, Universitat de València.         [ Links ]
+
+Pons, Javier y E. Berjano. 1999 El consumo abusivo de alcohol en la adolescencia: un modelo explicativo desde la psicología social, Madrid, Plan Nacional sobre Drogas.         [ Links ]
+
+Pons, Javier, S. Pinazo y A. Carreras. 2002 "El consumo de inhalables y cannabis en la preadolescencia: análisis multivariado de factores predisponentes", en Anales de Psicología,núm. 18, pp. 77–93.         [ Links ]
+
+Pons, Xavier. 2007 Materiales para la intervención social y educativa ante el consumo de drogas, Alicante, Editorial Club Universitario.         [ Links ]
+
+Ramírez, Bayardo. 1991 La cuestión de las drogas en América Latina. Una visión global, Caracas, Monte Ávila.         [ Links ]
+
+Riley, Diane y P. O'Hare. 2000 "Harm reducction: history, definition and practice", en James Inciardi y L. Harrison, comps., Harm reduction: national and international perspectives, Londres, Sage.         [ Links ]
+
+Salleras, Lluís. 1985 Educación sanitaria: principios, métodos y aplicaciones, Madrid, Díaz de Santos.         [ Links ]
+
+Sánchez–Vidal, Alipio. 1998 Psicología comunitaria: bases conceptuales y métodos de intervención, Barcelona, Editorial EUB.         [ Links ]
+
+Schuckit, Marc. 1986 "Genetic and clinical implications of alcoholism and affective disorder", en American Journal of Psychiatry, núm. 143, pp. 140–147.         [ Links ]
+
+Van Avermaet, Eddy. 1992 "Influencia social en los grupos", en Miles Hewstone y W. Stroebe, comps., Introducción a la psicología social, Barcelona, Ariel.         [ Links ]
+
+Vega, Amando. 1992 "Modelos interpretativos de la problemática de las drogas", en Revista Española de Drogodependencias, núm. 17, pp. 221â232.         [ Links ]
+
+Ventosa, Lluís. 1990 Delinqüència i dissocialitat, Barcelona, Fundació Jaume Bofill.         [ Links ]
+
+Vuori, Hannu. 1980 "The medical model and the objectives in health education", en International Journal of Health Education, núm. 23, pp. 17–25.         [ Links ]
+
+World Health Organization. 2000 European Alcohol Action Plan, Copenhague, Regional Office of the WHO.         [ Links ]`;
+    
+    // Elementos del DOM
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendButton = document.getElementById('sendButton');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const toggleApiVisibility = document.getElementById('toggleApiVisibility');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    // Función para alternar la visibilidad de la clave API
+    toggleApiVisibility.addEventListener('click', () => {
+        if (apiKeyInput.type === 'text') {
+            apiKeyInput.type = 'password';
+        } else {
+            apiKeyInput.type = 'text';
+        }
+    });
+    
+    // Función para agregar mensajes al chat
+    function addMessage(text, isUser) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+        
+        // Renderizar Markdown solo para mensajes del bot
+        if (!isUser && window.marked) {
+            // Configurar marked para que abra enlaces en nueva pestaña
+            const renderer = new marked.Renderer();
+            renderer.link = function(href, title, text) {
+                const link = marked.Renderer.prototype.link.apply(this, arguments);
+                return link.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
+            };
+            
+            // Aplicar marked con configuración de seguridad
+            messageDiv.innerHTML = marked.parse(text, {
+                renderer: renderer,
+                gfm: true,           // GitHub Flavored Markdown
+                breaks: true,        // Convertir saltos de línea en <br>
+                sanitize: false,     // No sanitizar, usaremos DOMPurify
+                smartLists: true,    // Listas más inteligentes
+                smartypants: false   // No convertir comillas, guiones, etc.
+            });
+            
+            // Sanitizar HTML para prevenir XSS
+            if (window.DOMPurify) {
+                messageDiv.innerHTML = DOMPurify.sanitize(messageDiv.innerHTML);
+            }
+        } else {
+            // Para mensajes del usuario o si marked no está disponible
+            messageDiv.textContent = text;
+        }
+        
+        // Aplicar estilos al nuevo mensaje
+        messageDiv.style.marginBottom = "15px";
+        messageDiv.style.padding = "10px 15px";
+        messageDiv.style.borderRadius = "18px";
+        messageDiv.style.maxWidth = "80%";
+        messageDiv.style.lineHeight = "1.5";
+        
+        if (isUser) {
+            messageDiv.style.backgroundColor = "#e3f2fd";
+            messageDiv.style.alignSelf = "flex-end";
+            messageDiv.style.marginLeft = "auto";
+            messageDiv.style.borderBottomRightRadius = "4px";
+        } else {
+            messageDiv.style.backgroundColor = "#f1f1f1";
+            messageDiv.style.alignSelf = "flex-start";
+            messageDiv.style.borderBottomLeftRadius = "4px";
+        }
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Función para mostrar errores
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
+    }
+    
+    // Función para enviar mensaje a la API de Gemini
+        const conversationHistory = [
+        {
+            role: "user",
+            parts: [{
+                text: `Eres un asistente académico para estudiantes universitarios. Tu tarea es responder preguntas y solicitudes ÚNICAMENTE sobre el siguiente capítulo. No debes inventar información que no esté en el texto. Si te preguntan algo que no está en el capítulo, indica amablemente que esa información no se encuentra en el material proporcionado. Sé claro, preciso y utiliza un tono formal pero amigable.
+    CAPÍTULO:
+    ${capitulo}`
+            }]
+        }
+    ];
+
+
+    async function sendToGemini(userMessage) {
+        const apiKey = apiKeyInput.value.trim();
+        
+        if (!apiKey) {
+            showError('Por favor, ingresa tu clave API de Gemini para continuar.');
+            return;
+        }
+        conversationHistory.push({
+        role: "user",
+        parts: [{ text: userMessage }]
+    });
+        // Mostrar indicador de escritura
+        typingIndicator.style.display = 'block';
+        
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': `${apiKey}`
+                },
+                body: JSON.stringify({
+                    contents: conversationHistory,
+                    generationConfig: {
+                        temperature: 0.2,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 6024
+                    }
+                })
+            });
+            
+            const data = await response.json();
+            
+            // Ocultar indicador de escritura
+            typingIndicator.style.display = 'none';
+            
+            if (data.error) {
+                showError(`Error: ${data.error.message || 'Ocurrió un error al comunicarse con la API de Gemini'}`);
+                return;
+            }
+            
+            if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                const botResponse = data.candidates[0].content.parts[0].text;
+                addMessage(botResponse, false);
+                console.log(botResponse)
+                conversationHistory.push({
+        role: "model",
+        parts: [{ text: botResponse }]
+    })
+            } else {
+                showError('No se pudo obtener una respuesta válida de la API.');
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            typingIndicator.style.display = 'none';
+            showError('Error de conexión. Por favor, verifica tu conexión a internet y la clave API.');
+        }
+    }
+    
+    // Event listener para el botón de enviar
+    sendButton.addEventListener('click', () => {
+        const userMessage = chatInput.value.trim();
+        if (userMessage) {
+            addMessage(userMessage, true);
+            chatInput.value = '';
+            sendToGemini(userMessage);
+        }
+    });
+    
+    // Event listener para enviar con Enter (pero permitir nueva línea con Shift+Enter)
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendButton.click();
+        }
+    });
+    
+    // Verificar si hay clave API guardada en localStorage
+    const savedApiKey = localStorage.getItem('geminiApiKey');
+    if (savedApiKey) {
+        apiKeyInput.value = savedApiKey;
+    }
+    
+    // Guardar clave API en localStorage cuando cambie
+    apiKeyInput.addEventListener('change', () => {
+        const apiKey = apiKeyInput.value.trim();
+        if (apiKey) {
+            localStorage.setItem('geminiApiKey', apiKey);
+        } else {
+            localStorage.removeItem('geminiApiKey');
+        }
+    });
+</script>
+</body>
+</html>
